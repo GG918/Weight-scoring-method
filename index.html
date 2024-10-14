@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weighted Scoring Method</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f7f7f7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            margin: 0;
+        }
+        h1 {
+            color: #34495e;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 36px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 900px;
+            background-color: white;
+            transition: transform 0.3s;
+        }
+        table:hover {
+            transform: translateY(-5px);
+        }
+        th, td {
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        th {
+            background-color: #34495e;
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        td {
+            border-bottom: 1px solid #ecf0f1;
+            font-weight: 400;
+        }
+        td:hover {
+            background-color: #f1f8ff;
+            transform: scale(1.02);
+            font-weight: 600;
+            color: #34495e;
+        }
+        select, input {
+            padding: 10px 15px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5), 0 0 10px rgba(52, 152, 219, 0.3);
+        }
+        button {
+            padding: 12px 24px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.2), 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .winner {
+            position: relative;
+        }
+        .winner::after {
+            content: "\f091";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            font-size: 24px;
+            color: #f1c40f;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .criteria-row:hover {
+            background-color: #f9f9f9;
+        }
+        .criteria-row:hover input[type="text"] {
+            background-color: white;
+        }
+        .criteria-row:hover select {
+            background-color: white;
+        }
+        .delete-btn {
+            color: #e74c3c;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .delete-btn:hover {
+            color: #c0392b;
+        }
+        .chart-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 20px 0;
+        }
+        .weight-sum {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .weight-sum.invalid {
+            color: #e74c3c;
+        }
+        .criteria-row {
+            transition: all 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease forwards;
+        }
+        .fade-out {
+            animation: fadeOut 0.3s ease forwards;
+        }
+        @media screen and (max-width: 600px) {
+            table {
+                font-size: 14px;
+            }
+            th, td {
+                padding: 10px;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 12px;
+            }
+            .winner::after {
+                font-size: 20px;
+                right: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Weighted Scoring Method</h1>
+
+    <table id="userTable">
+        <tr>
+            <th>Criteria</th>
+            <th>Weight</th>
+            <th><input type="text" value="Option 1"></th>
+            <th><input type="text" value="Option 2"></th>
+            <th><input type="text" value="Option 3"></th>
+            <th></th>
+        </tr>
+        <tr class="criteria-row">
+            <td><input type="text" value="Criteria 1"></td>
+            <td>
+                <select>
+                    <option value="">Select</option>
+                    <option value="0.1">0.1</option>
+                    <option value="0.2">0.2</option>
+                    <option value="0.3">0.3</option>
+                    <option value="0.4">0.4</option>
+                    <option value="0.5">0.5</option>
+                </select>
+            </td>
+            <td>
+                <select>
+                    <option value="">Select</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </td>
+            <td>
+                <select>
+                    <option value="">Select</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </td>
+            <td>
+                <select>
+                    <option value="">Select</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </td>
+            <td>
+                <i class="fas fa-trash-alt delete-btn"></i>
+            </td>
+        </tr>
+        <tr class="criteria-row">
+            <td><input type="text" value="Criteria 2"></td>
+            <td>
+                <select>
+                    <option value="">Select</option>
+                    <option value="0.1">0.1</option>
+                    <option value="0.2">0.2</option>
+                    <option value="0.3">0.3</option>
+                    <option value="0.4">0.4</option>
+                    <option value="0.5">0.5</option>
+                </select>
+            </td>
+            <td>
+                <select>
+                    <option value="">Select</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </td>
+            <td>
+                <select>
+                    <option value="">Select</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </td>
+            <td>
+                <select>
+                    <option value="">Select</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </td>
+            <td>
+                <i class="fas fa-trash-alt delete-btn"></i>
+            </td>
+        </tr>
+        <tr class="criteria-row">
+            <td><input type="text" value="Criteria 3"></td>
+            <td>
+                <select>
+                    <option value="">Select</option>
+                    <option value="0.1">0.1</option>
+                    <option value="0.2">0.2</option>
+                    <option value="0.3">0.3</option>
+                    <option value="0.4">0.4</option>
+                    <option value="0.5">0.5</option>
+                </select>
+            </td>
+            <td>
+                <select>
+                    <option value="">Select</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </td>
+            <td>
+                <select>
+                    <option value="">Select</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </td>
+            <td>
+                <select>
+                    <option value="">Select</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </td>
+            <td>
+                <i class="fas fa-trash-alt delete-btn"></i>
+            </td>
+        </tr>
+        <tr>
+            <td>Total Score</td>
+            <td></td>
+            <td id="totalScore1"></td>
+            <td id="totalScore2"></td>
+            <td id="totalScore3"></td>
+            <td></td>
+        </tr>
+    </table>
+    <div class="button-container">
+        <button id="addRow">Add Criteria</button>
+        <button id="addColumn">Add Option</button>
+    </div>
+    
+    <div class="chart-container">
+        <canvas id="scoresChart"></canvas>
+    </div>
+    
+    <div class="weight-sum" id="weightSum"></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userTable = document.getElementById('userTable');
+        const addRowButton = document.getElementById('addRow');
+        const addColumnButton = document.getElementById('addColumn');
+        const weightSumElement = document.getElementById('weightSum');
+        let chart;
+
+        function calculateTotalScores() {
+            const rows = userTable.rows;
+            const totalScores = Array(rows[0].cells.length - 3).fill(0);
+            let weightSum = 0;
+
+            for (let i = 1; i < rows.length - 1; i++) {
+                const weight = parseFloat(rows[i].cells[1].querySelector('select').value);
+                if (isNaN(weight)) continue;
+                weightSum += weight;
+
+                for (let j = 2; j < rows[i].cells.length - 1; j++) {
+                    const score = parseInt(rows[i].cells[j].querySelector('select').value);
+                    if (isNaN(score)) continue;
+                    totalScores[j - 2] += weight * score;
+                }
+            }
+
+            let highestScore = 0;
+            let winnerIndex = -1;
+
+            for (let i = 0; i < totalScores.length; i++) {
+                const totalScoreCell = document.getElementById(`totalScore${i + 1}`);
+                totalScoreCell.textContent = totalScores[i].toFixed(1);
+                totalScoreCell.classList.remove('winner');
+
+                if (totalScores[i] > highestScore) {
+                    highestScore = totalScores[i];
+                    winnerIndex = i;
+                }
+            }
+
+            if (winnerIndex !== -1) {
+                document.getElementById(`totalScore${winnerIndex + 1}`).classList.add('winner');
+            }
+
+            weightSumElement.textContent = `Weight Sum: ${weightSum.toFixed(2)}`;
+            weightSumElement.classList.toggle('invalid', Math.abs(weightSum - 1) > 0.001);
+
+            updateChart(totalScores);
+        }
+
+        function updateChart(scores) {
+            const labels = Array.from(userTable.rows[0].cells)
+                .slice(2, -1)
+                .map(cell => cell.querySelector('input').value);
+
+            if (chart) {
+                chart.data.labels = labels;
+                chart.data.datasets[0].data = scores;
+                chart.update();
+            } else {
+                const ctx = document.getElementById('scoresChart').getContext('2d');
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Total Scores',
+                            data: scores,
+                            backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                            borderColor: 'rgba(52, 152, 219, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function addCriteriaRow() {
+            const newRow = document.createElement('tr');
+            newRow.classList.add('criteria-row', 'fade-in');
+            newRow.innerHTML = `
+                <td><input type="text" value="New Criteria"></td>
+                <td>
+                    <select>
+                        <option value="">Select</option>
+                        <option value="0.1">0.1</option>
+                        <option value="0.2">0.2</option>
+                        <option value="0.3">0.3</option>
+                        <option value="0.4">0.4</option>
+                        <option value="0.5">0.5</option>
+                    </select>
+                </td>
+            `;
+
+            for (let i = 2; i < userTable.rows[0].cells.length - 1; i++) {
+                newRow.insertCell(-1).innerHTML = `
+                    <select>
+                        <option value="">Select</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                `;
+            }
+
+            newRow.insertCell(-1).innerHTML = '<i class="fas fa-trash-alt delete-btn"></i>';
+
+            userTable.querySelector('tbody').insertBefore(newRow, userTable.rows[userTable.rows.length - 1]);
+
+            newRow.querySelectorAll('select').forEach(select => {
+                select.addEventListener('change', calculateTotalScores);
+            });
+
+            newRow.querySelector('.delete-btn').addEventListener('click', () => {
+                newRow.classList.add('fade-out');
+                setTimeout(() => {
+                    newRow.remove();
+                    calculateTotalScores();
+                }, 300);
+            });
+        }
+
+        function addOptionColumn() {
+            const rows = userTable.rows;
+            const headerRow = rows[0];
+            const newHeader = document.createElement('th');
+            newHeader.classList.add('fade-in');
+            const newInput = document.createElement('input');
+            newInput.type = 'text';
+            newInput.value = `Option ${headerRow.cells.length - 2}`;
+            newHeader.appendChild(newInput);
+            headerRow.insertBefore(newHeader, headerRow.lastElementChild);
+
+            for (let i = 1; i < rows.length; i++) {
+                const newCell = document.createElement('td');
+                newCell.classList.add('fade-in');
+                if (i === rows.length - 1) {
+                    newCell.id = `totalScore${headerRow.cells.length - 3}`;
+                } else {
+                    newCell.innerHTML = `
+                        <select>
+                            <option value="">Select</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    `;
+                    newCell.querySelector('select').addEventListener('change', calculateTotalScores);
+                }
+                rows[i].insertBefore(newCell, rows[i].lastElementChild);
+            }
+            calculateTotalScores();
+        }
+
+        userTable.querySelectorAll('select').forEach(select => {
+            select.addEventListener('change', calculateTotalScores);
+        });
+
+        userTable.querySelectorAll('.delete-btn').forEach(deleteBtn => {
+            deleteBtn.addEventListener('click', () => {
+                const row = deleteBtn.closest('.criteria-row');
+                row.classList.add('fade-out');
+                setTimeout(() => {
+                    row.remove();
+                    calculateTotalScores();
+                }, 300);
+            });
+        });
+
+        addRowButton.addEventListener('click', addCriteriaRow);
+        addColumnButton.addEventListener('click', addOptionColumn);
+
+        calculateTotalScores(); // Initial calculation and chart creation
+    });
+    </script>
+</body>
+</html>
